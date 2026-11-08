@@ -1,9 +1,9 @@
 // -------------------------------------------------------------------------
 /**
- * Keeps the two teams that are currently playing on the court. A Match
- * cannot change after it is created.
+ * Keeps the two teams playing on the court.
+ * A match cannot change after it is made.
  *
- * @author
+ * @author Dochan (Logan) Moon
  * @version 7 Nov 2026
  */
 public class Match
@@ -20,14 +20,23 @@ public class Match
     /**
      * Creates a match between two teams.
      *
-     * @param homeTeam the first team taken from the queue
-     * @param awayTeam the second team taken from the queue
-     * @throws IllegalArgumentException if either team is null or their names
-     *             match (ignoring case)
+     * @param homeTeam the first team from the queue
+     * @param awayTeam the second team from the queue
+     * @throws IllegalArgumentException if a team is null or both teams have
+     *             the same name
      */
     public Match(Team homeTeam, Team awayTeam)
     {
-        // TODO: validate
+        if (homeTeam == null || awayTeam == null)
+        {
+            throw new IllegalArgumentException("A match needs two teams");
+        }
+        if (homeTeam.getName().equalsIgnoreCase(awayTeam.getName()))
+        {
+            throw new IllegalArgumentException(
+                "A team cannot play itself");
+        }
+
         this.homeTeam = homeTeam;
         this.awayTeam = awayTeam;
     }
@@ -37,7 +46,7 @@ public class Match
 
     // ----------------------------------------------------------
     /**
-     * Gets the first team selected from the queue.
+     * Gets the first team.
      *
      * @return the home team
      */
@@ -49,7 +58,7 @@ public class Match
 
     // ----------------------------------------------------------
     /**
-     * Gets the second team selected from the queue.
+     * Gets the second team.
      *
      * @return the away team
      */

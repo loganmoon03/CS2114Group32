@@ -1,9 +1,9 @@
 // -------------------------------------------------------------------------
 /**
- * Keeps the outcome of one action: whether it succeeded and the message
- * explaining why. A Result cannot change after it is created.
+ * Keeps the outcome of one action: if it worked and a message saying why.
+ * A result cannot change after it is made.
  *
- * @author
+ * @author Dochan (Logan) Moon
  * @version 7 Nov 2026
  */
 public class Result
@@ -20,16 +20,19 @@ public class Result
     /**
      * Creates the outcome of one action.
      *
-     * @param success whether the action was accepted
-     * @param message why it succeeded or was rejected; must not be null or
-     *            blank
+     * @param success true if the action worked
+     * @param message why it worked or failed
      * @throws IllegalArgumentException if message is null or blank
      */
     public Result(boolean success, String message)
     {
-        // TODO: validate and trim message
+        if (message == null || message.trim().isEmpty())
+        {
+            throw new IllegalArgumentException("Message cannot be blank");
+        }
+
         this.success = success;
-        this.message = message;
+        this.message = message.trim();
     }
 
     // ~ Public Methods ........................................................
@@ -37,9 +40,9 @@ public class Result
 
     // ----------------------------------------------------------
     /**
-     * Checks whether the action succeeded.
+     * Checks if the action worked.
      *
-     * @return true if the action was accepted
+     * @return true if the action worked
      */
     public boolean isSuccess()
     {
@@ -49,7 +52,7 @@ public class Result
 
     // ----------------------------------------------------------
     /**
-     * Gets the outcome message.
+     * Gets the message.
      *
      * @return the trimmed message
      */

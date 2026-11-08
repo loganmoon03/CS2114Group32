@@ -4,33 +4,22 @@ import java.util.NoSuchElementException;
 
 // -------------------------------------------------------------------------
 /**
- * A first-in, first-out queue built from singly linked nodes with head and
- * tail references.
+ * A first-in, first-out queue made of linked nodes.
+ * It keeps a head (front) and a tail (back) reference.
  *
- * This class only owns storage: nodes, the head and tail references, and
- * the count. It knows nothing about teams or pickup games.
- *
- * Time complexity, where n is the number of items:
- *   enqueue  O(1)
- *   dequeue  O(1)
- *   peek     O(1)
- *   isEmpty  O(1)
- *   size     O(1)
- *   toList   O(n)
- *
- * @author
+ * @author Dochan (Logan) Moon
  * @version 7 Nov 2026
  *
- * @param <T> the type of items stored in the queue
+ * @param <T> the type of items in the queue
  */
 public class LinkedQueue<T>
 {
 
     // ~ Fields ................................................................
 
-    private Node<T> head; // front of the queue (next out), or null
-    private Node<T> tail; // back of the queue (last in), or null
-    private int size;     // number of items in the queue
+    private Node<T> head; // front of the queue, or null
+    private Node<T> tail; // back of the queue, or null
+    private int size;
 
     // ~ Constructors ..........................................................
 
@@ -40,7 +29,9 @@ public class LinkedQueue<T>
      */
     public LinkedQueue()
     {
-        // TODO: size zero; head and tail null
+        head = null;
+        tail = null;
+        size = 0;
     }
 
     // ~ Public Methods ........................................................
@@ -48,55 +39,86 @@ public class LinkedQueue<T>
 
     // ----------------------------------------------------------
     /**
-     * Adds an item at the back of the queue.
+     * Adds an item to the back of the queue.
      *
-     * @param item the item to add; must not be null
+     * @param item the item to add
      * @throws IllegalArgumentException if item is null
      */
     public void enqueue(T item)
     {
-        // TODO: reject null, link a new node behind tail, size++
+        if (item == null)
+        {
+            throw new IllegalArgumentException("Item cannot be null");
+        }
+
+        Node<T> newNode = new Node<T>(item);
+
+        if (isEmpty())
+        {
+            head = newNode;
+        }
+        else
+        {
+            tail.next = newNode;
+        }
+        tail = newNode;
+        size++;
     }
 
 
     // ----------------------------------------------------------
     /**
-     * Removes and returns the item at the front of the queue.
+     * Removes and returns the item at the front.
      *
      * @return the front item
      * @throws NoSuchElementException if the queue is empty
      */
     public T dequeue()
     {
-        // TODO: move head forward, size--; set tail to null when emptied
-        return null;
+        if (isEmpty())
+        {
+            throw new NoSuchElementException("Queue is empty");
+        }
+
+        T item = head.data;
+        head = head.next;
+        size--;
+
+        // the queue is empty now, so the tail is gone too
+        if (head == null)
+        {
+            tail = null;
+        }
+        return item;
     }
 
 
     // ----------------------------------------------------------
     /**
-     * Returns the item at the front of the queue without removing it.
+     * Gets the item at the front without removing it.
      *
      * @return the front item
      * @throws NoSuchElementException if the queue is empty
      */
     public T peek()
     {
-        // TODO
-        return null;
+        if (isEmpty())
+        {
+            throw new NoSuchElementException("Queue is empty");
+        }
+        return head.data;
     }
 
 
     // ----------------------------------------------------------
     /**
-     * Checks whether the queue has no items.
+     * Checks if the queue has no items.
      *
-     * @return true if size is zero
+     * @return true if the queue is empty
      */
     public boolean isEmpty()
     {
-        // TODO
-        return false;
+        return size == 0;
     }
 
 
@@ -104,26 +126,32 @@ public class LinkedQueue<T>
     /**
      * Gets the number of items in the queue.
      *
-     * @return the item count, including zero
+     * @return the number of items
      */
     public int size()
     {
-        // TODO
-        return 0;
+        return size;
     }
 
 
     // ----------------------------------------------------------
     /**
-     * Returns a new list of the items in FIFO order without removing them.
+     * Gets all items from front to back without removing them.
      * Changing the list does not change the queue.
      *
-     * @return the items from head to tail, or an empty list
+     * @return a new list of the items
      */
     public List<T> toList()
     {
-        // TODO: walk from head to tail and copy each item
-        return new ArrayList<T>();
+        List<T> list = new ArrayList<T>();
+
+        Node<T> current = head;
+        while (current != null)
+        {
+            list.add(current.data);
+            current = current.next;
+        }
+        return list;
     }
 
     // ~ Private Classes .......................................................
@@ -131,17 +159,17 @@ public class LinkedQueue<T>
 
     // ----------------------------------------------------------
     /**
-     * One link in the queue. It holds one item and the next node.
+     * One node in the queue. It holds one item and the next node.
      *
-     * @param <E> the type of item stored in the node
+     * @param <E> the type of item in the node
      */
     private static class Node<E>
     {
-        private final E data; // item stored in this node
-        private Node<E> next; // link to the next node, or null
+        private final E data;
+        private Node<E> next;
 
         /**
-         * Creates a node with the given data and no next node.
+         * Creates a node with no next node.
          *
          * @param data the item to store
          */

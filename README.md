@@ -118,15 +118,15 @@ Who does what? Which team member owns each remaining item.
 | Match             |                |                    |
 | Result            |                |                    |
 | CourtManager      |                |                    |
-| ConsoleView       |                |                    |
-| GotNextController |                |                    |
+| ConsoleView       |    Yabsira     | GenAI drafted w/ supervision                   |
+| GotNextController |    Yabsira     | GenAI drafted w/ supervision                   |
 | Main              |                |                    |
 | LinkedQueueTest   |                |                    |
 | TeamTest          |                |                    |
 | MatchTest         |                |                    |
 | ResultTest        |                |                    |
-| CourtManagerTest  |                |                    |
-| README            |                |                    |
+| CourtManagerTest  |    Yabsira     | GenAI drafted w/ supervision                   |
+| README            |       *ALL*      | GenAI assisted                  |
 
 GenAI note: TODO
 

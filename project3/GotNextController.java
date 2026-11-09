@@ -1,3 +1,6 @@
+import java.util.ArrayList;
+import java.util.List;
+
 // -------------------------------------------------------------------------
 /**
  * Runs the menu loop, turns user input into CourtManager calls, and passes
@@ -30,7 +33,10 @@ public class GotNextController
      */
     public GotNextController(CourtManager manager, ConsoleView view)
     {
-        // TODO: reject null
+        if (manager == null || view == null)
+        {
+            throw new IllegalArgumentException("Model and view cannot be null");
+        }
         this.manager = manager;
         this.view = view;
         this.running = false;
@@ -45,8 +51,38 @@ public class GotNextController
      */
     public void run()
     {
-        // TODO: loop: showMenu, readLine, parseMenuChoice, call a handler,
-        // then view.showResult(...) and view.showState(...)
+        running = true;
+        while (running)
+        {
+            view.showMenu();
+            String raw = view.readLine("Choose an option: ");
+            if (raw == null)
+            {
+                running = false;
+                break;
+            }
+            switch (parseMenuChoice(raw))
+            {
+                case 1:
+                    handleRegister();
+                    break;
+                case 2:
+                    handleStart();
+                    break;
+                case 3:
+                    handleFinish();
+                    break;
+                case 4:
+                    handleViewStatus();
+                    break;
+                case 5:
+                    running = false;
+                    break;
+                default:
+                    view.showMessage("Invalid menu choice. Enter 1 through 5.");
+                    break;
+            }
+        }
     }
 
     // ~ Private Methods .......................................................
@@ -61,7 +97,22 @@ public class GotNextController
      */
     private int parseMenuChoice(String raw)
     {
-        // TODO
+        if (raw == null)
+        {
+            return -1;
+        }
+        try
+        {
+            int choice = Integer.parseInt(raw.trim());
+            if (choice >= 1 && choice <= 5)
+            {
+                return choice;
+            }
+        }
+        catch (NumberFormatException e)
+        {
+            // Blank, nonnumeric, and excessively large choices are invalid.
+        }
         return -1;
     }
 
@@ -72,7 +123,25 @@ public class GotNextController
      */
     private void handleRegister()
     {
-        // TODO
+        String name = view.readLine("Team name: ");
+        if (name == null)
+        {
+            running = false;
+            return;
+        }
+        List<String> players = new ArrayList<String>();
+        for (int i = 1; i <= 5; i++)
+        {
+            String player = view.readLine("Player " + i + ": ");
+            if (player == null)
+            {
+                running = false;
+                return;
+            }
+            players.add(player);
+        }
+        view.showResult(manager.registerTeam(name, players));
+        handleViewStatus();
     }
 
 
@@ -82,7 +151,8 @@ public class GotNextController
      */
     private void handleStart()
     {
-        // TODO
+        view.showResult(manager.startMatch());
+        handleViewStatus();
     }
 
 
@@ -92,7 +162,8 @@ public class GotNextController
      */
     private void handleFinish()
     {
-        // TODO
+        view.showResult(manager.finishMatch());
+        handleViewStatus();
     }
 
 
@@ -102,6 +173,6 @@ public class GotNextController
      */
     private void handleViewStatus()
     {
-        // TODO
+        view.showState(manager.getWaitingTeams(), manager.getCurrentMatch());
     }
 }

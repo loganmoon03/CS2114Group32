@@ -1,3 +1,5 @@
+import java.util.Arrays;
+import java.util.List;
 import student.TestCase;
 
 // -------------------------------------------------------------------------
@@ -14,6 +16,7 @@ public class CourtManagerTest
     // ~ Fields ................................................................
 
     private CourtManager manager;
+    private List<String> players;
 
     // ~ Constructors ..........................................................
 
@@ -24,6 +27,7 @@ public class CourtManagerTest
     public void setUp()
     {
         manager = new CourtManager();
+        players = Arrays.asList("A", "B", "C", "D", "E");
     }
 
     // ~ Public Methods ........................................................
@@ -35,8 +39,12 @@ public class CourtManagerTest
      */
     public void testConstructor()
     {
-        // TODO Normal: getWaitingTeams() is empty and getCurrentMatch() is null
-        // TODO Empty case: startMatch() or finishMatch() right away returns a failed Result
+        assertTrue(manager.getWaitingTeams().isEmpty());
+        assertNull(manager.getCurrentMatch());
+        assertFalse(manager.startMatch().isSuccess());
+        assertFalse(manager.finishMatch().isSuccess());
+        assertTrue(manager.getWaitingTeams().isEmpty());
+        assertNull(manager.getCurrentMatch());
     }
 
 
@@ -46,7 +54,15 @@ public class CourtManagerTest
      */
     public void testRegisterTeam()
     {
-        // TODO Normal: valid team returns a successful Result and is at the back of getWaitingTeams()
+        Result result = manager.registerTeam(" Lakers ", players);
+        assertTrue(result.isSuccess());
+        assertEquals("Team Lakers was added", result.getMessage());
+        assertTrue(manager.registerTeam("Bulls", players).isSuccess());
+        assertEquals(2, manager.getWaitingTeams().size());
+        assertEquals("Lakers", manager.getWaitingTeams().get(0).getName());
+        assertEquals(players, manager.getWaitingTeams().get(0).getPlayers());
+        assertEquals("Bulls", manager.getWaitingTeams().get(1).getName());
+        assertNull(manager.getCurrentMatch());
     }
 
 
@@ -56,7 +72,22 @@ public class CourtManagerTest
      */
     public void testRegisterTeamBadData()
     {
-        // TODO Bad input: blank name, wrong roster size, blank or repeated player returns a failed Result; list unchanged
+        manager.registerTeam("Lakers", players);
+        manager.registerTeam("Bulls", players);
+        manager.registerTeam("Celtics", players);
+        manager.startMatch();
+        assertRejectedRegistration(null, players);
+        assertRejectedRegistration("   ", players);
+        assertRejectedRegistration("New", null);
+        assertRejectedRegistration("New", Arrays.asList("A", "B", "C", "D"));
+        assertRejectedRegistration("New",
+            Arrays.asList("A", "B", "C", "D", "E", "F"));
+        assertRejectedRegistration("New",
+            Arrays.asList("A", "B", "C", "D", null));
+        assertRejectedRegistration("New",
+            Arrays.asList("A", "B", "C", "D", "  "));
+        assertRejectedRegistration("New",
+            Arrays.asList("Sam", " sam ", "C", "D", "E"));
     }
 
 
@@ -66,8 +97,14 @@ public class CourtManagerTest
      */
     public void testRegisterTeamDuplicate()
     {
-        // TODO Bad input: name already waiting ("lakers" vs. "Lakers") returns a failed Result
-        // TODO Bad input: name already playing returns a failed Result
+        manager.registerTeam("Lakers", players);
+        manager.registerTeam("Bulls", players);
+        assertRejectedRegistration(" lakers ", players);
+        manager.startMatch();
+        manager.registerTeam("Celtics", players);
+        assertRejectedRegistration(" LAKERS ", players);
+        assertRejectedRegistration(" bulls ", players);
+        assertRejectedRegistration(" celtics ", players);
     }
 
 
@@ -77,9 +114,26 @@ public class CourtManagerTest
      */
     public void testStartMatch()
     {
-        // TODO Normal: with three waiting, first two are in the match in order and the third still waits
-        // TODO Boundary case: fewer than two waiting returns a failed Result; nothing changes
-        // TODO Boundary case: match already in progress returns a failed Result; nothing changes
+        assertFalse(manager.startMatch().isSuccess());
+        manager.registerTeam("Lakers", players);
+        List<Team> before = manager.getWaitingTeams();
+        assertFalse(manager.startMatch().isSuccess());
+        assertEquals(before, manager.getWaitingTeams());
+        assertNull(manager.getCurrentMatch());
+        manager.registerTeam("Bulls", players);
+        manager.registerTeam("Celtics", players);
+        before = manager.getWaitingTeams();
+        assertTrue(manager.startMatch().isSuccess());
+        Match match = manager.getCurrentMatch();
+        assertSame(before.get(0), match.getHomeTeam());
+        assertSame(before.get(1), match.getAwayTeam());
+        assertEquals(Arrays.asList(before.get(2)), manager.getWaitingTeams());
+        // Even with enough waiting teams, an active match prevents a start.
+        manager.registerTeam("Heat", players);
+        before = manager.getWaitingTeams();
+        assertFalse(manager.startMatch().isSuccess());
+        assertSame(match, manager.getCurrentMatch());
+        assertEquals(before, manager.getWaitingTeams());
     }
 
 
@@ -89,8 +143,28 @@ public class CourtManagerTest
      */
     public void testFinishMatch()
     {
-        // TODO Normal: current match becomes null and neither team is re-queued
-        // TODO Empty case: no match in progress returns a failed Result; nothing changes
+        manager.registerTeam("Lakers", players);
+        List<Team> before = manager.getWaitingTeams();
+        assertFalse(manager.finishMatch().isSuccess());
+        assertEquals(before, manager.getWaitingTeams());
+        assertNull(manager.getCurrentMatch());
+        manager.registerTeam("Bulls", players);
+        manager.registerTeam("Celtics", players);
+        manager.startMatch();
+        before = manager.getWaitingTeams();
+        assertTrue(manager.finishMatch().isSuccess());
+        assertNull(manager.getCurrentMatch());
+        assertEquals(before, manager.getWaitingTeams());
+        assertEquals(1, manager.getWaitingTeams().size());
+        assertFalse(manager.finishMatch().isSuccess());
+        assertEquals(before, manager.getWaitingTeams());
+        // Finished teams may register again at the back.
+        assertTrue(manager.registerTeam("Lakers", players).isSuccess());
+        assertTrue(manager.registerTeam("Bulls", players).isSuccess());
+        assertEquals("Celtics", manager.getWaitingTeams().get(0).getName());
+        assertTrue(manager.startMatch().isSuccess());
+        assertEquals("Celtics",
+            manager.getCurrentMatch().getHomeTeam().getName());
     }
 
 
@@ -100,8 +174,21 @@ public class CourtManagerTest
      */
     public void testGetWaitingTeams()
     {
-        // TODO Normal: returns waiting teams in registration order
-        // TODO Empty case: returns an empty list; changing it does not change the manager
+        List<Team> snapshot = manager.getWaitingTeams();
+        assertTrue(snapshot.isEmpty());
+        snapshot.add(new Team("Outside", players));
+        assertTrue(manager.getWaitingTeams().isEmpty());
+        manager.registerTeam("Lakers", players);
+        manager.registerTeam("Bulls", players);
+        snapshot = manager.getWaitingTeams();
+        assertEquals("Lakers", snapshot.get(0).getName());
+        assertEquals("Bulls", snapshot.get(1).getName());
+        snapshot.clear();
+        assertEquals(2, manager.getWaitingTeams().size());
+        assertTrue(manager.startMatch().isSuccess());
+        assertEquals("Lakers",
+            manager.getCurrentMatch().getHomeTeam().getName());
+        assertTrue(manager.getWaitingTeams().isEmpty());
     }
 
 
@@ -111,7 +198,35 @@ public class CourtManagerTest
      */
     public void testGetCurrentMatch()
     {
-        // TODO Normal: returns the match after startMatch()
-        // TODO Empty case: returns null when the court is empty
+        assertNull(manager.getCurrentMatch());
+        manager.registerTeam("Lakers", players);
+        manager.registerTeam("Bulls", players);
+        assertTrue(manager.startMatch().isSuccess());
+        Match match = manager.getCurrentMatch();
+        assertNotNull(match);
+        assertSame(match, manager.getCurrentMatch());
+        assertEquals("Lakers", match.getHomeTeam().getName());
+        assertEquals("Bulls", match.getAwayTeam().getName());
+        assertTrue(manager.finishMatch().isSuccess());
+        assertNull(manager.getCurrentMatch());
+    }
+
+
+    // ----------------------------------------------------------
+    /**
+     * Checks that invalid registration reports failure and preserves state.
+     *
+     * @param name the proposed team name
+     * @param roster the proposed players
+     */
+    private void assertRejectedRegistration(String name, List<String> roster)
+    {
+        List<Team> before = manager.getWaitingTeams();
+        Match match = manager.getCurrentMatch();
+        Result result = manager.registerTeam(name, roster);
+        assertFalse(result.isSuccess());
+        assertFalse(result.getMessage().trim().isEmpty());
+        assertEquals(before, manager.getWaitingTeams());
+        assertSame(match, manager.getCurrentMatch());
     }
 }

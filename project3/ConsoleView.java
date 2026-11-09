@@ -41,7 +41,11 @@ public class ConsoleView
      */
     public void showMenu()
     {
-        // TODO
+        System.out.println("1. Register team");
+        System.out.println("2. Start match");
+        System.out.println("3. Finish match");
+        System.out.println("4. View status");
+        System.out.println("5. Quit");
     }
 
 
@@ -54,7 +58,11 @@ public class ConsoleView
      */
     public String readLine(String prompt)
     {
-        // TODO: print prompt; return null when scanner has no next line
+        System.out.print(prompt);
+        if (scanner.hasNextLine())
+        {
+            return scanner.nextLine();
+        }
         return null;
     }
 
@@ -67,7 +75,7 @@ public class ConsoleView
      */
     public void showResult(Result result)
     {
-        // TODO: print result.getMessage()
+        System.out.println(result.getMessage());
     }
 
 
@@ -80,7 +88,25 @@ public class ConsoleView
      */
     public void showState(List<Team> waitingTeams, Match currentMatch)
     {
-        // TODO: "No teams waiting" / "No game in progress" for empty cases
+        System.out.println("Waiting teams:");
+        if (waitingTeams.isEmpty())
+        {
+            System.out.println("No teams waiting");
+        }
+        for (int i = 0; i < waitingTeams.size(); i++)
+        {
+            System.out.println((i + 1) + ". " + waitingTeams.get(i).getName());
+        }
+        if (currentMatch == null)
+        {
+            System.out.println("No game in progress");
+        }
+        else
+        {
+            System.out.println("Current match: "
+                + currentMatch.getHomeTeam().getName() + " vs "
+                + currentMatch.getAwayTeam().getName());
+        }
     }
 
 
@@ -92,6 +118,6 @@ public class ConsoleView
      */
     public void showMessage(String message)
     {
-        // TODO
+        System.out.println(message);
     }
 }

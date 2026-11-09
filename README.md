@@ -11,11 +11,11 @@ A console app that organizes pickup basketball games at a gym. Teams sign up, se
 
 Model (state and logic, no input/output)
 
-`LinkedQueue.java` - Generic FIFO queue with head and tail references (`Node` is a private class inside it)
-`Team.java` - One team's name and its five player names
-`Match.java` - The two teams currently playing on the court
-`Result.java` - The outcome of one action: success flag and message
-`CourtManager.java` - Got Next rules: waiting queue, current match, registration, start, finish
+* `LinkedQueue.java` - Generic FIFO queue with head and tail references (`Node` is a private class inside it)
+* `Team.java` - One team's name and its five player names
+* `Match.java` - The two teams currently playing on the court
+* `Result.java` - The outcome of one action: success flag and message
+* `CourtManager.java` - Got Next rules: waiting queue, current match, registration, start, finish
 
 View
 

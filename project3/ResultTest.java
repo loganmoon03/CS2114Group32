@@ -2,14 +2,19 @@ import student.TestCase;
 
 // -------------------------------------------------------------------------
 /**
- * Tests the Result class.
+ * Tests the Result class without any view.
  *
- * @author
- * @version 7 Nov 2026
+ * @author Shalin Patel (shalinkpatel)
+ * @version 9 Nov 2026
  */
 public class ResultTest
     extends TestCase
 {
+
+    // ~ Fields ................................................................
+
+    private Result success;
+    private Result failure;
 
     // ~ Constructors ..........................................................
 
@@ -19,7 +24,8 @@ public class ResultTest
      */
     public void setUp()
     {
-        // TODO
+        success = new Result(true, "Team Lakers was added");
+        failure = new Result(false, "Not enough teams waiting");
     }
 
     // ~ Public Methods ........................................................
@@ -27,12 +33,26 @@ public class ResultTest
 
     // ----------------------------------------------------------
     /**
-     * Tests the constructor
+     * Tests the constructor with valid data
      */
     public void testConstructor()
     {
-        // TODO Normal: stores the success flag and the trimmed message
-        // TODO Bad input: null or blank message throws IllegalArgumentException
+        assertTrue(success.isSuccess());
+        assertEquals("Team Lakers was added", success.getMessage());
+        assertFalse(failure.isSuccess());
+        assertEquals("Not enough teams waiting", failure.getMessage());
+    }
+
+
+    // ----------------------------------------------------------
+    /**
+     * Tests the constructor with a bad message
+     */
+    public void testConstructorBadMessage()
+    {
+        assertBadResult(null);
+        assertBadResult("");
+        assertBadResult("   ");
     }
 
 
@@ -42,8 +62,8 @@ public class ResultTest
      */
     public void testIsSuccess()
     {
-        // TODO Normal: returns true for a successful result
-        // TODO Boundary case: returns false for a failed result
+        assertTrue(success.isSuccess());
+        assertFalse(failure.isSuccess());
     }
 
 
@@ -53,7 +73,31 @@ public class ResultTest
      */
     public void testGetMessage()
     {
-        // TODO Normal: returns the message given
-        // TODO Immutability check: a message with surrounding spaces is returned trimmed
+        assertEquals("Team Lakers was added", success.getMessage());
+        Result padded = new Result(false, "  No match in progress  ");
+        assertEquals("No match in progress", padded.getMessage());
+    }
+
+
+    // ----------------------------------------------------------
+    /**
+     * Checks that making a result with this message throws an
+     * IllegalArgumentException.
+     *
+     * @param message the proposed message
+     */
+    private void assertBadResult(String message)
+    {
+        Exception thrown = null;
+        try
+        {
+            new Result(true, message);
+        }
+        catch (Exception e)
+        {
+            thrown = e;
+        }
+        assertNotNull(thrown);
+        assertTrue(thrown instanceof IllegalArgumentException);
     }
 }

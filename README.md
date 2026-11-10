@@ -79,6 +79,7 @@ What changed from your specification? Classes, method signatures, where validati
 
 - **Classes and model signatures:** All eight spec classes were built, and every public model method matches the spec.
 - **`TEAM_SIZE`:** Moved from `CourtManager` to `Team`, since the `Team` constructor is what checks roster size. `TEAMS_PER_MATCH` stayed in `CourtManager`.
+- **`isTaken()` helper:** Added a private method in `CourtManager` that checks waiting and playing teams for a duplicate name. The public API did not change. _Prompted by:_ `registerTeam()` getting too long during implementation.
 - **View methods:** The spec didn't list them. We built `showMenu`, `readLine`, `showResult`, `showState`, and `showMessage`. `showMessage` handles invalid menu choices, which the controller rejects before the model is called, so there's no `Result` to show.
 - **Scanner:** `ConsoleView` takes its `Scanner` in the constructor, so `Main` passes `System.in` and a test could pass scripted input.
 - **Menu:** "View waiting list" became "View status", which shows the line and the court together.
@@ -169,7 +170,7 @@ Who does what? Which team member owns each remaining item.
 | README - Next Steps | Jonathan       | GenAI drafted w/ supervision |
 | README              | _ALL_          | GenAI assisted               |
 
-GenAI note: TODO
+GenAI note: used ChatGPT to build the project skeleton and write the five model classes from our Deliverable 2 method signatures, and later asked it to compare the code with our spec and explain some methods so I could understand them myself. I kept the code after checking it against the spec and running it with normal and bad input, and I also kept two changes it made on its own (moving `TEAM_SIZE` into `Team` and adding a private `isTaken()` helper) because they fit our design. It helped me write the code quickly in our old project's style, but it did not help with team decisions, and its design changes meant I had to track what changed for the Reflection.
 
 ## Authors
 

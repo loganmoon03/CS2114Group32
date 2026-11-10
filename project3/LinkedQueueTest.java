@@ -1,11 +1,14 @@
+import java.util.Arrays;
+import java.util.List;
+import java.util.NoSuchElementException;
 import student.TestCase;
 
 // -------------------------------------------------------------------------
 /**
- * Tests the LinkedQueue class.
+ * Tests the LinkedQueue class without any view.
  *
- * @author
- * @version 7 Nov 2026
+ * @author Shalin Patel (shalinkpatel)
+ * @version 9 Nov 2026
  */
 public class LinkedQueueTest
     extends TestCase
@@ -19,7 +22,7 @@ public class LinkedQueueTest
 
     // ----------------------------------------------------------
     /**
-     * Sets up each test method.
+     * Sets up each test method with an empty queue.
      */
     public void setUp()
     {
@@ -35,8 +38,21 @@ public class LinkedQueueTest
      */
     public void testConstructor()
     {
-        // TODO Normal: new queue is empty: isEmpty() is true and size() is 0
-        // TODO Empty case: dequeue() on a new queue throws NoSuchElementException
+        assertTrue(queue.isEmpty());
+        assertEquals(0, queue.size());
+        assertTrue(queue.toList().isEmpty());
+
+        Exception thrown = null;
+        try
+        {
+            queue.dequeue();
+        }
+        catch (Exception e)
+        {
+            thrown = e;
+        }
+        assertNotNull(thrown);
+        assertTrue(thrown instanceof NoSuchElementException);
     }
 
 
@@ -46,17 +62,39 @@ public class LinkedQueueTest
      */
     public void testEnqueue()
     {
-        // TODO Normal: item is added at the back, size goes up by one, peek() still returns the first item
+        queue.enqueue("A");
+        assertEquals(1, queue.size());
+        assertEquals("A", queue.peek());
+
+        queue.enqueue("B");
+        assertEquals(2, queue.size());
+        // the front item does not change when adding at the back
+        assertEquals("A", queue.peek());
+        assertEquals(Arrays.asList("A", "B"), queue.toList());
     }
 
 
     // ----------------------------------------------------------
     /**
-     * Tests enqueue() with null
+     * Tests enqueue() with a null item
      */
     public void testEnqueueNull()
     {
-        // TODO Bad input: IllegalArgumentException is thrown and size is unchanged
+        queue.enqueue("A");
+
+        Exception thrown = null;
+        try
+        {
+            queue.enqueue(null);
+        }
+        catch (Exception e)
+        {
+            thrown = e;
+        }
+        assertNotNull(thrown);
+        assertTrue(thrown instanceof IllegalArgumentException);
+        assertEquals(1, queue.size());
+        assertEquals(Arrays.asList("A"), queue.toList());
     }
 
 
@@ -66,8 +104,21 @@ public class LinkedQueueTest
      */
     public void testDequeue()
     {
-        // TODO Normal: enqueue A, B, C returns A, then B, then C
-        // TODO Boundary case: removing the last item empties the queue, and a new enqueue still works
+        queue.enqueue("A");
+        queue.enqueue("B");
+        queue.enqueue("C");
+
+        assertEquals("A", queue.dequeue());
+        assertEquals("B", queue.dequeue());
+        assertEquals(1, queue.size());
+        assertEquals("C", queue.dequeue());
+        assertTrue(queue.isEmpty());
+
+        // removing the last item resets the queue, so it still works
+        queue.enqueue("D");
+        assertEquals(1, queue.size());
+        assertEquals("D", queue.peek());
+        assertEquals(Arrays.asList("D"), queue.toList());
     }
 
 
@@ -77,7 +128,21 @@ public class LinkedQueueTest
      */
     public void testDequeueEmpty()
     {
-        // TODO Empty case: NoSuchElementException is thrown
+        queue.enqueue("A");
+        queue.dequeue();
+
+        Exception thrown = null;
+        try
+        {
+            queue.dequeue();
+        }
+        catch (Exception e)
+        {
+            thrown = e;
+        }
+        assertNotNull(thrown);
+        assertTrue(thrown instanceof NoSuchElementException);
+        assertEquals(0, queue.size());
     }
 
 
@@ -87,8 +152,33 @@ public class LinkedQueueTest
      */
     public void testPeek()
     {
-        // TODO Normal: returns the front item without removing it; size is unchanged
-        // TODO Empty case: empty queue throws NoSuchElementException
+        queue.enqueue("A");
+        queue.enqueue("B");
+
+        assertEquals("A", queue.peek());
+        assertEquals("A", queue.peek());
+        assertEquals(2, queue.size());
+    }
+
+
+    // ----------------------------------------------------------
+    /**
+     * Tests peek() on an empty queue
+     */
+    public void testPeekEmpty()
+    {
+        Exception thrown = null;
+        try
+        {
+            queue.peek();
+        }
+        catch (Exception e)
+        {
+            thrown = e;
+        }
+        assertNotNull(thrown);
+        assertTrue(thrown instanceof NoSuchElementException);
+        assertTrue(queue.isEmpty());
     }
 
 
@@ -98,8 +188,11 @@ public class LinkedQueueTest
      */
     public void testIsEmpty()
     {
-        // TODO Normal: returns false after an item is added
-        // TODO Boundary case: returns true again after every item is dequeued
+        assertTrue(queue.isEmpty());
+        queue.enqueue("A");
+        assertFalse(queue.isEmpty());
+        queue.dequeue();
+        assertTrue(queue.isEmpty());
     }
 
 
@@ -109,8 +202,26 @@ public class LinkedQueueTest
      */
     public void testSize()
     {
-        // TODO Normal: returns the count after several enqueues and dequeues
-        // TODO Empty case: returns 0 after a rejected enqueue(null)
+        queue.enqueue("A");
+        queue.enqueue("B");
+        queue.enqueue("C");
+        queue.dequeue();
+        assertEquals(2, queue.size());
+
+        queue.dequeue();
+        queue.dequeue();
+        assertEquals(0, queue.size());
+
+        // a rejected item does not change the size
+        try
+        {
+            queue.enqueue(null);
+        }
+        catch (IllegalArgumentException e)
+        {
+            // expected
+        }
+        assertEquals(0, queue.size());
     }
 
 
@@ -120,7 +231,20 @@ public class LinkedQueueTest
      */
     public void testToList()
     {
-        // TODO Normal: returns items in FIFO order; size is unchanged
-        // TODO Empty case: empty queue returns an empty list; changing the list does not change the queue
+        assertTrue(queue.toList().isEmpty());
+
+        queue.enqueue("A");
+        queue.enqueue("B");
+        queue.enqueue("C");
+
+        List<String> list = queue.toList();
+        assertEquals(Arrays.asList("A", "B", "C"), list);
+        assertEquals(3, queue.size());
+
+        // changing the returned list does not change the queue
+        list.clear();
+        assertEquals(3, queue.size());
+        assertEquals("A", queue.peek());
+        assertEquals(Arrays.asList("A", "B", "C"), queue.toList());
     }
 }

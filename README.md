@@ -11,11 +11,11 @@ A console app that organizes pickup basketball games at a gym. Teams sign up, se
 
 Model (state and logic, no input/output)
 
-* `LinkedQueue.java` - Generic FIFO queue with head and tail references (`Node` is a private class inside it)
-* `Team.java` - One team's name and its five player names
-* `Match.java` - The two teams currently playing on the court
-* `Result.java` - The outcome of one action: success flag and message
-* `CourtManager.java` - Got Next rules: waiting queue, current match, registration, start, finish
+- `LinkedQueue.java` - Generic FIFO queue with head and tail references (`Node` is a private class inside it)
+- `Team.java` - One team's name and its five player names
+- `Match.java` - The two teams currently playing on the court
+- `Result.java` - The outcome of one action: success flag and message
+- `CourtManager.java` - Got Next rules: waiting queue, current match, registration, start, finish
 
 View
 
@@ -52,7 +52,11 @@ java Main
 
 Type the number of a menu option and press Enter.
 
-TODO: list the menu options once GotNextController is done.
+1 - Register team (team name, then five player names)
+2 - Start match (the first two waiting teams go on the court)
+3 - Finish match (both teams leave the court; they can register again)
+4 - View status (shows the waiting line and the current match)
+5 - Quit
 
 ## Running the model without the view
 
@@ -80,7 +84,6 @@ What changed from your specification? Classes, method signatures, where validati
 - **Menu:** "View waiting list" became "View status", which shows the line and the court together.
 - **Validation:** Matches the spec. The controller checks menu syntax, constructors reject bad data, `CourtManager` converts those errors into failed `Result`s and enforces game rules, and `LinkedQueue` rejects `null` and empty removals.
 - **Tests:** These follow the plan, with related cases grouped into one method (e.g. `testStartMatch`). We added `assertRejectedRegistration`, which checks that state is unchanged after a bad registration. The planned "change the original name string" case wasn't testable because Strings are immutable, so we tested trimming and capitalization instead.
-
 
 Did the model really stand alone? Was there anything you had to move across the model/view line to make it run, or anything in the model that still knows about the view?
 
@@ -149,22 +152,22 @@ Who does what? Which team member owns each remaining item.
 
 | File                | Team member(s) | Contribution (how)           |
 | ------------------- | -------------- | ---------------------------- |
-| LinkedQueue         |    Logan       |                              |
-| Team                |    Logan       |                              |
-| Match               |    Logan       |                              |
-| Result              |    Logan       |                              |
-| CourtManager        |    Logan       |                              |
-| ConsoleView         |    Yabsira     | GenAI drafted w/ supervision |
-| GotNextController   |    Yabsira     | GenAI drafted w/ supervision |
+| LinkedQueue         | Logan          | GenAI drafted w/ supervision |
+| Team                | Logan          | GenAI drafted w/ supervision |
+| Match               | Logan          | GenAI drafted w/ supervision |
+| Result              | Logan          | GenAI drafted w/ supervision |
+| CourtManager        | Logan          | GenAI drafted w/ supervision |
+| ConsoleView         | Yabsira        | GenAI drafted w/ supervision |
+| GotNextController   | Yabsira        | GenAI drafted w/ supervision |
 | Main                |                |                              |
-| LinkedQueueTest     |    Shalin      |                              |
-| TeamTest            |    Shalin      |                              |
-| MatchTest           |    Shalin      |                              |
-| ResultTest          |    Shalin      |                              |
-| CourtManagerTest    |    Yabsira     | GenAI drafted w/ supervision |
-| README - Reflection |    Jonathan    | GenAI drafted w/ supervision |
-| README - Next Steps |    Jonathan    | GenAI drafted w/ supervision |
-| README              |     *ALL*      | GenAI assisted               |
+| LinkedQueueTest     | Shalin         |                              |
+| TeamTest            | Shalin         |                              |
+| MatchTest           | Shalin         |                              |
+| ResultTest          | Shalin         |                              |
+| CourtManagerTest    | Yabsira        | GenAI drafted w/ supervision |
+| README - Reflection | Jonathan       | GenAI drafted w/ supervision |
+| README - Next Steps | Jonathan       | GenAI drafted w/ supervision |
+| README              | _ALL_          | GenAI assisted               |
 
 GenAI note: TODO
 

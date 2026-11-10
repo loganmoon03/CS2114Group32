@@ -155,6 +155,9 @@ public class CourtManager
      */
     private boolean isTaken(String name)
     {
+        /* equalsIgnoreCase() compares two strings without 
+        *caring about uppercase or lowercase letters.
+        */
         for (Team team : waitingTeams.toList())
         {
             if (team.getName().equalsIgnoreCase(name))

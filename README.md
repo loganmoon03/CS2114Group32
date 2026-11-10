@@ -160,10 +160,10 @@ Who does what? Which team member owns each remaining item.
 | ConsoleView         | Yabsira        | GenAI drafted w/ supervision |
 | GotNextController   | Yabsira        | GenAI drafted w/ supervision |
 | Main                |                |                              |
-| LinkedQueueTest     | Shalin         |                              |
-| TeamTest            | Shalin         |                              |
-| MatchTest           | Shalin         |                              |
-| ResultTest          | Shalin         |                              |
+| LinkedQueueTest     | Shalin         | GenAI drafted w/ supervision |
+| TeamTest            | Shalin         | GenAI drafted w/ supervision |
+| MatchTest           | Shalin         | GenAI drafted w/ supervision |
+| ResultTest          | Shalin         | GenAI drafted w/ supervision |
 | CourtManagerTest    | Yabsira        | GenAI drafted w/ supervision |
 | README - Reflection | Jonathan       | GenAI drafted w/ supervision |
 | README - Next Steps | Jonathan       | GenAI drafted w/ supervision |

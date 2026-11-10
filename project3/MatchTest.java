@@ -1,15 +1,23 @@
+import java.util.Arrays;
+import java.util.List;
 import student.TestCase;
 
 // -------------------------------------------------------------------------
 /**
- * Tests the Match class.
+ * Tests the Match class without any view.
  *
- * @author
- * @version 7 Nov 2026
+ * @author Shalin Patel (shalinkpatel)
+ * @version 9 Nov 2026
  */
 public class MatchTest
     extends TestCase
 {
+
+    // ~ Fields ................................................................
+
+    private Team lakers;
+    private Team bulls;
+    private Match match;
 
     // ~ Constructors ..........................................................
 
@@ -19,7 +27,10 @@ public class MatchTest
      */
     public void setUp()
     {
-        // TODO
+        List<String> players = Arrays.asList("A", "B", "C", "D", "E");
+        lakers = new Team("Lakers", players);
+        bulls = new Team("Bulls", players);
+        match = new Match(lakers, bulls);
     }
 
     // ~ Public Methods ........................................................
@@ -27,12 +38,37 @@ public class MatchTest
 
     // ----------------------------------------------------------
     /**
-     * Tests the constructor
+     * Tests the constructor with two different teams
      */
     public void testConstructor()
     {
-        // TODO Normal: two different teams creates a match
-        // TODO Bad input: null team or same name ignoring case throws IllegalArgumentException
+        assertSame(lakers, match.getHomeTeam());
+        assertSame(bulls, match.getAwayTeam());
+    }
+
+
+    // ----------------------------------------------------------
+    /**
+     * Tests the constructor with null teams
+     */
+    public void testConstructorNullTeam()
+    {
+        assertBadMatch(null, bulls);
+        assertBadMatch(lakers, null);
+        assertBadMatch(null, null);
+    }
+
+
+    // ----------------------------------------------------------
+    /**
+     * Tests the constructor with two teams that have the same name
+     */
+    public void testConstructorSameName()
+    {
+        Team otherLakers = new Team("LAKERS",
+            Arrays.asList("F", "G", "H", "I", "J"));
+        assertBadMatch(lakers, otherLakers);
+        assertBadMatch(lakers, lakers);
     }
 
 
@@ -42,8 +78,10 @@ public class MatchTest
      */
     public void testGetHomeTeam()
     {
-        // TODO Normal: returns the first team given
-        // TODO Immutability check: returns the same team on every call
+        assertSame(lakers, match.getHomeTeam());
+        // same team on every call; there is no setter to change it
+        assertSame(match.getHomeTeam(), match.getHomeTeam());
+        assertNotSame(bulls, match.getHomeTeam());
     }
 
 
@@ -53,7 +91,33 @@ public class MatchTest
      */
     public void testGetAwayTeam()
     {
-        // TODO Normal: returns the second team given
-        // TODO Immutability check: returns the same team on every call
+        assertSame(bulls, match.getAwayTeam());
+        // same team on every call; there is no setter to change it
+        assertSame(match.getAwayTeam(), match.getAwayTeam());
+        assertNotSame(lakers, match.getAwayTeam());
+    }
+
+
+    // ----------------------------------------------------------
+    /**
+     * Checks that making a match with these teams throws an
+     * IllegalArgumentException.
+     *
+     * @param home the proposed home team
+     * @param away the proposed away team
+     */
+    private void assertBadMatch(Team home, Team away)
+    {
+        Exception thrown = null;
+        try
+        {
+            new Match(home, away);
+        }
+        catch (Exception e)
+        {
+            thrown = e;
+        }
+        assertNotNull(thrown);
+        assertTrue(thrown instanceof IllegalArgumentException);
     }
 }

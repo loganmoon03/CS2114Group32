@@ -5,7 +5,7 @@ import java.util.Scanner;
  * Program entry point. Creates the model, view, and controller and starts
  * the menu loop.
  *
- * @author
+ * @author Dochan (Logan) Moon
  * @version 7 Nov 2026
  */
 public class Main

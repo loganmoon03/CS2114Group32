@@ -108,8 +108,6 @@ What doesn't work yet? MVP features, bad-input cases, or tests that are missing 
 
 ## Next Steps
 
-## Next Steps
-
 What is left to finish the MVP? The remaining features and fixes, in the order you will do them.
 
 - All MVP features from the scope work, so only documentation is left:

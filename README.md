@@ -113,20 +113,20 @@ Who does what? Which team member owns each remaining item.
 
 | File              | Team member(s) | Contribution (how) |
 | ----------------- | -------------- | ------------------ |
-| LinkedQueue       |                |                    |
-| Team              |                |                    |
-| Match             |                |                    |
-| Result            |                |                    |
-| CourtManager      |                |                    |
-| ConsoleView       |    Yabsira     | GenAI drafted w/ supervision                   |
-| GotNextController |    Yabsira     | GenAI drafted w/ supervision                   |
+| LinkedQueue       |    Logan       |                    |
+| Team              |    Logan       |                    |
+| Match             |    Logan       |                    |
+| Result            |    Logan       |                    |
+| CourtManager      |    Logan       |                    |
+| ConsoleView       |    Yabsira     | GenAI drafted w/ supervision|
+| GotNextController |    Yabsira     | GenAI drafted w/ supervision|
 | Main              |                |                    |
-| LinkedQueueTest   |                |                    |
-| TeamTest          |                |                    |
-| MatchTest         |                |                    |
-| ResultTest        |                |                    |
-| CourtManagerTest  |    Yabsira     | GenAI drafted w/ supervision                   |
-| README            |       *ALL*      | GenAI assisted                  |
+| LinkedQueueTest   |    Shalin      |                    |
+| TeamTest          |    Shalin      |                    |
+| MatchTest         |    Shalin      |                    |
+| ResultTest        |    Shalin      |                    |
+| CourtManagerTest  |    Yabsira     | GenAI drafted w/ supervision|
+| README            |       *ALL*    | GenAI assisted     |
 
 GenAI note: TODO
 

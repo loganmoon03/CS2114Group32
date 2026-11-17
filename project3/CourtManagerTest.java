@@ -235,8 +235,8 @@ public class CourtManagerTest
 
         // the loser leaves and does not go back into the line
         assertEquals(before, manager.getWaitingTeams());
-        assertEquals(1, manager.getWaitingTeams().size());
         assertEquals("Celtics", manager.getWaitingTeams().get(0).getName());
+        assertTrue(manager.registerTeam("Bulls", players).isSuccess());
     }
 
 
@@ -248,19 +248,22 @@ public class CourtManagerTest
     {
         manager.registerTeam("Lakers", players);
         manager.registerTeam("Bulls", players);
+        manager.registerTeam("Celtics", players);
         assertTrue(manager.startMatch().isSuccess());
+        List<Team> before = manager.getWaitingTeams();
 
-        // the away team can be the winner too
+        // the away team can win too
         Result result = manager.finishMatch("BULLS", false);
         assertTrue(result.isSuccess());
         assertEquals("Bulls won, both teams left", result.getMessage());
         assertNull(manager.getCurrentMatch());
         assertNull(manager.getStayingTeam());
-        assertTrue(manager.getWaitingTeams().isEmpty());
+        assertEquals(before, manager.getWaitingTeams());
 
-        // both teams left, so both can register again
+        // both teams left the court, so both can register again
         assertTrue(manager.registerTeam("Lakers", players).isSuccess());
         assertTrue(manager.registerTeam("Bulls", players).isSuccess());
+        assertEquals("Bulls", manager.getWaitingTeams().get(2).getName());
     }
 
 
@@ -270,24 +273,34 @@ public class CourtManagerTest
      */
     public void testFinishMatchBadWinner()
     {
-        // no match is in progress
-        Result result = manager.finishMatch("Lakers", true);
-        assertFalse(result.isSuccess());
-        assertNull(manager.getCurrentMatch());
-        assertNull(manager.getStayingTeam());
+        // no match is in progress on a new court
+        assertRejectedFinish("Lakers", true);
+        assertRejectedFinish("Lakers", false);
+        assertEquals("No match is in progress",
+            manager.finishMatch("Lakers", true).getMessage());
 
         manager.registerTeam("Lakers", players);
         manager.registerTeam("Bulls", players);
         manager.registerTeam("Celtics", players);
         assertTrue(manager.startMatch().isSuccess());
 
-        assertRejectedFinish(null);
-        assertRejectedFinish("");
-        assertRejectedFinish("   ");
+        // blank winner names
+        assertRejectedFinish(null, true);
+        assertRejectedFinish("", true);
+        assertRejectedFinish("   ", false);
+        assertEquals("Winner name cannot be blank",
+            manager.finishMatch("   ", true).getMessage());
         // Celtics is waiting, not playing
-        assertRejectedFinish("Celtics");
+        assertRejectedFinish("Celtics", true);
         // Heat was never registered
-        assertRejectedFinish("Heat");
+        assertRejectedFinish("Heat", false);
+        assertEquals("Heat is not in the current match",
+            manager.finishMatch(" Heat ", true).getMessage());
+
+        // no match is in progress while a winner is staying
+        assertTrue(manager.finishMatch("Lakers", true).isSuccess());
+        assertRejectedFinish("Lakers", true);
+        assertRejectedFinish("Lakers", false);
     }
 
 
@@ -303,22 +316,43 @@ public class CourtManagerTest
         assertTrue(manager.finishMatch("Lakers", true).isSuccess());
         Team lakers = manager.getStayingTeam();
 
-        // no teams waiting, so no match can start and the winner stays
-        assertFalse(manager.startMatch().isSuccess());
+        // zero teams waiting: the winner has no one to play
+        Result result = manager.startMatch();
+        assertFalse(result.isSuccess());
+        assertEquals("At least 1 team must be waiting", result.getMessage());
         assertNull(manager.getCurrentMatch());
         assertSame(lakers, manager.getStayingTeam());
         assertTrue(manager.getWaitingTeams().isEmpty());
 
-        // with a winner staying, only one waiting team comes on
+        // one team waiting is enough when a winner is staying
         manager.registerTeam("Celtics", players);
         manager.registerTeam("Heat", players);
-        assertTrue(manager.startMatch().isSuccess());
+        Team celtics = manager.getWaitingTeams().get(0);
+        result = manager.startMatch();
+        assertTrue(result.isSuccess());
+        assertEquals("Lakers vs Celtics started", result.getMessage());
         Match match = manager.getCurrentMatch();
         assertSame(lakers, match.getHomeTeam());
-        assertEquals("Celtics", match.getAwayTeam().getName());
+        assertSame(celtics, match.getAwayTeam());
         assertNull(manager.getStayingTeam());
+        // only one team left the line
         assertEquals(1, manager.getWaitingTeams().size());
         assertEquals("Heat", manager.getWaitingTeams().get(0).getName());
+
+        // a match in progress still blocks a start
+        List<Team> before = manager.getWaitingTeams();
+        assertFalse(manager.startMatch().isSuccess());
+        assertSame(match, manager.getCurrentMatch());
+        assertNull(manager.getStayingTeam());
+        assertEquals(before, manager.getWaitingTeams());
+
+        // the winner can keep staying on
+        assertTrue(manager.finishMatch("Lakers", true).isSuccess());
+        assertTrue(manager.startMatch().isSuccess());
+        assertSame(lakers, manager.getCurrentMatch().getHomeTeam());
+        assertEquals("Heat",
+            manager.getCurrentMatch().getAwayTeam().getName());
+        assertTrue(manager.getWaitingTeams().isEmpty());
     }
 
 
@@ -333,11 +367,17 @@ public class CourtManagerTest
         assertTrue(manager.startMatch().isSuccess());
         assertTrue(manager.finishMatch("Lakers", true).isSuccess());
 
+        // the staying winner's name is taken in any capitalization
         assertRejectedRegistration("Lakers", players);
-        assertRejectedRegistration(" LAKERS ", players);
+        assertRejectedRegistration(" lakers ", players);
+        assertRejectedRegistration("LAKERS", players);
+        Result result = manager.registerTeam("Lakers", players);
+        assertEquals("Team Lakers is already waiting or on the court",
+            result.getMessage());
 
-        // the losing team left the court, so it can register again
-        assertTrue(manager.registerTeam("Bulls", players).isSuccess());
+        // other names still register while a winner is staying
+        assertTrue(manager.registerTeam("Celtics", players).isSuccess());
+        assertEquals(1, manager.getWaitingTeams().size());
     }
 
 
@@ -351,16 +391,22 @@ public class CourtManagerTest
         manager.registerTeam("Lakers", players);
         manager.registerTeam("Bulls", players);
         assertTrue(manager.startMatch().isSuccess());
-        // nobody is staying while a match is being played
-        assertNull(manager.getStayingTeam());
-        assertTrue(manager.finishMatch("Lakers", false).isSuccess());
+        // a match and a staying team never exist at the same time
         assertNull(manager.getStayingTeam());
 
-        // the original finishMatch() never leaves a winner staying
-        manager.registerTeam("Lakers", players);
-        manager.registerTeam("Bulls", players);
+        Team bulls = manager.getCurrentMatch().getAwayTeam();
+        assertTrue(manager.finishMatch("Bulls", true).isSuccess());
+        assertSame(bulls, manager.getStayingTeam());
+        // same team on every call
+        assertSame(manager.getStayingTeam(), manager.getStayingTeam());
+
+        // the staying team moves into the next match
+        manager.registerTeam("Celtics", players);
         assertTrue(manager.startMatch().isSuccess());
-        assertTrue(manager.finishMatch().isSuccess());
+        assertNull(manager.getStayingTeam());
+
+        // a winner who leaves is not held
+        assertTrue(manager.finishMatch("Celtics", false).isSuccess());
         assertNull(manager.getStayingTeam());
     }
 
@@ -388,17 +434,17 @@ public class CourtManagerTest
 
     // ----------------------------------------------------------
     /**
-     * Checks that finishing with a bad winner reports failure and preserves
-     * state.
+     * Checks that an invalid finish reports failure and preserves state.
      *
      * @param winnerName the proposed winner
+     * @param winnerStays whether the winner would stay
      */
-    private void assertRejectedFinish(String winnerName)
+    private void assertRejectedFinish(String winnerName, boolean winnerStays)
     {
         List<Team> before = manager.getWaitingTeams();
         Match match = manager.getCurrentMatch();
         Team staying = manager.getStayingTeam();
-        Result result = manager.finishMatch(winnerName, true);
+        Result result = manager.finishMatch(winnerName, winnerStays);
         assertFalse(result.isSuccess());
         assertFalse(result.getMessage().trim().isEmpty());
         assertEquals(before, manager.getWaitingTeams());

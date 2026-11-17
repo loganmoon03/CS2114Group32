@@ -413,6 +413,30 @@ public class CourtManagerTest
 
     // ----------------------------------------------------------
     /**
+     * Tests that a staying winner who loses the next match does not stay
+     */
+    public void testStayingTeamLosesNextMatch()
+    {
+        manager.registerTeam("Lakers", players);
+        manager.registerTeam("Bulls", players);
+        assertTrue(manager.startMatch().isSuccess());
+        assertTrue(manager.finishMatch("Lakers", true).isSuccess());
+
+        // the old finishMatch() fails with no match and keeps the winner
+        assertFalse(manager.finishMatch().isSuccess());
+        assertEquals("Lakers", manager.getStayingTeam().getName());
+
+        manager.registerTeam("Celtics", players);
+        assertTrue(manager.startMatch().isSuccess());
+        assertTrue(manager.finishMatch("Celtics", true).isSuccess());
+        assertEquals("Celtics", manager.getStayingTeam().getName());
+        // the old winner left, so its name is free again
+        assertTrue(manager.registerTeam("Lakers", players).isSuccess());
+    }
+
+
+    // ----------------------------------------------------------
+    /**
      * Checks that invalid registration reports failure and preserves state.
      *
      * @param name the proposed team name

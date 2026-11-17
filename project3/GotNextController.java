@@ -158,21 +158,75 @@ public class GotNextController
 
     // ----------------------------------------------------------
     /**
-     * Finishes the current match.
+     * Finishes the current match. Asks who won and if the winner stays.
      */
     private void handleFinish()
     {
-        view.showResult(manager.finishMatch());
+        if (manager.getCurrentMatch() == null)
+        {
+            // * the model reports that no match is in progress
+            view.showResult(manager.finishMatch());
+            handleViewStatus();
+            return;
+        }
+
+        String winner = view.readLine("Winning team: ");
+        if (winner == null)
+        {
+            running = false;
+            return;
+        }
+        String stay = view.readLine("Does the winner stay? (y/n): ");
+        if (stay == null)
+        {
+            running = false;
+            return;
+        }
+
+        int choice = parseYesNo(stay);
+        if (choice == -1)
+        {
+            view.showMessage("Invalid answer. Enter y or n.");
+            handleViewStatus();
+            return;
+        }
+
+        view.showResult(manager.finishMatch(winner, choice == 1));
         handleViewStatus();
     }
 
 
     // ----------------------------------------------------------
     /**
-     * Shows the waiting line and the current match.
+     * Turns a yes or no answer into a number.
+     *
+     * @param raw the text the user typed
+     * @return 1 for yes, 0 for no, or -1 if it is neither
+     */
+    private int parseYesNo(String raw)
+    {
+        String answer = raw.trim().toLowerCase();
+        if (answer.equals("y") || answer.equals("yes"))
+        {
+            return 1;
+        }
+        if (answer.equals("n") || answer.equals("no"))
+        {
+            return 0;
+        }
+        return -1;
+    }
+
+
+    // ----------------------------------------------------------
+    /**
+     * Shows the waiting line, the current match, and the staying winner.
      */
     private void handleViewStatus()
     {
-        view.showState(manager.getWaitingTeams(), manager.getCurrentMatch());
+        view.showState(
+            manager.getWaitingTeams(),
+            manager.getCurrentMatch(),
+            manager.getStayingTeam());
     }
 }

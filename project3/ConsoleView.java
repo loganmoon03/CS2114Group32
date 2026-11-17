@@ -81,12 +81,16 @@ public class ConsoleView
 
     // ----------------------------------------------------------
     /**
-     * Prints the waiting line and the current match.
+     * Prints the waiting line, the current match, and the staying winner.
      *
      * @param waitingTeams the waiting teams in order, possibly empty
      * @param currentMatch the match on the court, or null
+     * @param stayingTeam the winner staying on the court, or null
      */
-    public void showState(List<Team> waitingTeams, Match currentMatch)
+    public void showState(
+        List<Team> waitingTeams,
+        Match currentMatch,
+        Team stayingTeam)
     {
         System.out.println("Waiting teams:");
         if (waitingTeams.isEmpty())
@@ -106,6 +110,10 @@ public class ConsoleView
             System.out.println("Current match: "
                 + currentMatch.getHomeTeam().getName() + " vs "
                 + currentMatch.getAwayTeam().getName());
+        }
+        if (stayingTeam != null)
+        {
+            System.out.println("Winner staying: " + stayingTeam.getName());
         }
     }
 

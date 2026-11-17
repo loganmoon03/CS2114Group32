@@ -1,6 +1,6 @@
 # CS2114Group32 Group 32 – Got Next
 
-A console app that organizes pickup basketball games at a gym. Teams sign up, see who is waiting, and play in the order they registered. After each game, both teams leave the court and can sign up again at the back of the line.
+A console app that organizes pickup basketball games at a gym. Teams sign up, see who is waiting, and play in the order they registered. After each game, the winner can stay on the court to play the next waiting team, or both teams leave and can sign up again at the back of the line.
 
 ## Requirements
 
@@ -15,15 +15,15 @@ Model (state and logic, no input/output)
 - `Team.java` - One team's name and its five player names
 - `Match.java` - The two teams currently playing on the court
 - `Result.java` - The outcome of one action: success flag and message
-- `CourtManager.java` - Got Next rules: waiting queue, current match, registration, start, finish
+- `CourtManager.java` - Got Next rules: waiting queue, current match, staying winner, registration, start, finish
 
 View
 
-`ConsoleView.java` - Prints the menu, waiting teams, current match, and messages; reads raw text
+`ConsoleView.java` - Prints the menu, waiting teams, current match, staying winner, and messages; reads raw text
 
 Controller
 
-`GotNextController.java` - Menu loop and menu-input checking; calls `CourtManager` and passes results to `ConsoleView`
+`GotNextController.java` - Menu loop and input-syntax checking (menu numbers, y/n); calls `CourtManager` and passes results to `ConsoleView`
 `Main.java` - Program entry point; creates the model, view, and controller
 
 Tests
@@ -53,9 +53,9 @@ java Main
 Type the number of a menu option and press Enter.
 
 1 - Register team (team name, then five player names)
-2 - Start match (the first two waiting teams go on the court)
-3 - Finish match (both teams leave the court; they can register again)
-4 - View status (shows the waiting line and the current match)
+2 - Start match (the first two waiting teams play, or the staying winner plays the first waiting team)
+3 - Finish match (type the winning team, then `y` if the winner stays or `n` if both teams leave)
+4 - View status (shows the waiting line, the current match, and the staying winner)
 5 - Quit
 
 ## Running the model without the view
@@ -66,7 +66,7 @@ The tests extend `student.TestCase`, so the course test library and JUnit must b
 
 ```
 javac -cp ".:path/to/student.jar:path/to/junit.jar" *.java
-java  -cp ".:path/to/student.jar:path/to/junit.jar" org.junit.runner.JUnitCore LinkedQueueTest CourtManagerTest
+java  -cp ".:path/to/student.jar:path/to/junit.jar" org.junit.runner.JUnitCore LinkedQueueTest TeamTest MatchTest ResultTest CourtManagerTest
 ```
 
 On Windows, use `;` instead of `:` to separate classpath entries.
@@ -75,98 +75,100 @@ If you use an IDE (Eclipse, IntelliJ, VS Code), add the same jars to the project
 
 ## Reflection
 
-What changed from your specification? Classes, method signatures, where validation lives, test cases — what did the spec say, what did you build instead, and why?
+How did your design absorb the change? List the classes your feature actually touched. Compare that with the prediction in your D3 Next Steps: what matched, what surprised you?
 
-- **Classes and model signatures:** All eight spec classes were built, and every public model method matches the spec.
-- **`TEAM_SIZE`:** Moved from `CourtManager` to `Team`, since the `Team` constructor is what checks roster size. `TEAMS_PER_MATCH` stayed in `CourtManager`.
-- **`isTaken()` helper:** Added a private method in `CourtManager` that checks waiting and playing teams for a duplicate name. The public API did not change. _Prompted by:_ `registerTeam()` getting too long during implementation.
-- **View methods:** The spec didn't list them. We built `showMenu`, `readLine`, `showResult`, `showState`, and `showMessage`. `showMessage` handles invalid menu choices, which the controller rejects before the model is called, so there's no `Result` to show.
-- **Scanner:** `ConsoleView` takes its `Scanner` in the constructor, so `Main` passes `System.in` and a test could pass scripted input.
-- **Menu:** "View waiting list" became "View status", which shows the line and the court together.
-- **Validation:** Matches the spec. The controller checks menu syntax, constructors reject bad data, `CourtManager` converts those errors into failed `Result`s and enforces game rules, and `LinkedQueue` rejects `null` and empty removals.
-- **Tests:** These follow the plan, with related cases grouped into one method (e.g. `testStartMatch`). We added `assertRejectedRegistration`, which checks that state is unchanged after a bad registration. The planned "change the original name string" case wasn't testable because Strings are immutable, so we tested trimming and capitalization instead.
+- **Feature:** Winner stays on, the change feature we named in D3.
+- **Classes touched:** `CourtManager`, `GotNextController`, `ConsoleView`, plus the tests in `CourtManagerTest` and one new test in `LinkedQueueTest`.
+- **What matched:** This is the same list D3 predicted. `LinkedQueue`, `Team`, `Match`, `Result`, and `Main` did not change at all. The winner is held in a new `stayingTeam` field in `CourtManager` and never goes back into the queue, and a new match is still a plain `Match` with the winner as the home team. `isTaken()` needed one more check for the staying winner, as predicted.
+- **What surprised us:**
+  - We did not have to change any existing method signature. We added an overload, `finishMatch(String winnerName, boolean winnerStays)`, and kept the old `finishMatch()`, so the old tests still pass without edits.
+  - The controller has to know whether a match is in progress before it asks "who won?". Otherwise the user would type a winner just to be told there is no match. It reads `getCurrentMatch()` and, if there is none, calls the old `finishMatch()` so the model still writes the error message.
+  - The rule "a match and a staying winner never exist at the same time" made the code simpler. `startMatch()` clears `stayingTeam` as soon as the winner goes into the new match.
 
-Did the model really stand alone? Was there anything you had to move across the model/view line to make it run, or anything in the model that still knows about the view?
+Did the change cross the model/view line? Did the view have to learn anything new about the model? If a change rippled through layers it shouldn't have, where and why?
 
-- **Yes.** Model classes only import `java.util` and never print, read input, or reference the view or controller. Every test builds model objects directly, with no view.
-- **Nothing had to move across the line.** The view reads `Team`, `Match`, and `Result` through getters, as planned, and that dependency only goes one way.
-- **One leak:** The controller hard-codes the roster size (five player prompts) because `Team.TEAM_SIZE` is private. Changing the roster size would mean editing both classes.
+- **It did not cross the line.** All winner rules are in `CourtManager`: the winner must be one of the two teams, the name is trimmed and case-insensitive, and the start needs one waiting team instead of two. A failed action changes nothing. The model still imports only `java.util`.
+- **What the view learned:** `showState()` got a third parameter, the staying `Team` (or `null`), and prints "Winner staying: X". The controller gets it from the new `getStayingTeam()` and passes it in. The view still keeps no copy of model state.
+- **What the controller learned:** It asks two new questions and checks only syntax. `y`/`yes`/`n`/`no` are accepted in any case, anything else is rejected before the model is called. Whether the winner name is valid is the model's job.
+- **Ripple:** The `showState()` signature change touched both the view and the controller. This was expected, because the controller is the only caller.
 
-What happened to your unknowns? Of the things you listed in your scope as not knowing how to do, which did you figure out, and which are still open?
+What changed from your D3 plan? Features, signatures, validation, or tests that differ from what you said you'd do, and why.
 
-- **Inspecting the queue without changing it:** Solved with `toList()`, which returns a copy in FIFO order. The display and the duplicate check both use it.
-- **Console-to-model communication:** Solved. The controller calls `CourtManager`, gets a `Result`, and passes it and the current state to the view.
-- **Testing that rejections change nothing:** Solved. Since `Team`, `Match`, and `Result` are immutable, tests compare `getWaitingTeams()` and `getCurrentMatch()` before and after each rejected action.
-- **Still open:** None.
+- **Signatures:** D3 said we would update the existing `finishMatch` and `startMatch` tests if their signatures changed. We used an overload instead, so `startMatch()` kept its signature (only its behavior changed) and no old test needed edits.
+- **New public methods:** `finishMatch(String, boolean)` and `getStayingTeam()`. D3 only described the field, but the view needs a getter to show the staying winner.
+- **Messages:** The duplicate-name message changed from "is already waiting or playing" to "is already waiting or on the court", because a staying winner is on the court but not playing.
+- **Tests:** Jonathan wrote the cases D3 listed: winner stays, winner leaves, bad winner names (null, blank, not in the match, no match), start with a staying winner and an empty or non-empty line, and registering the staying winner's name. He added the `assertRejectedFinish` helper and made `assertRejectedRegistration` also check the staying winner, so every rejection test checks that all three pieces of state are unchanged. Logan added one case D3 did not list: a staying winner who loses the next match does not stay, and the old `finishMatch()` with no match keeps the staying winner. `LinkedQueueTest` got an interleaved enqueue/dequeue order test.
+- **Work split:** D3 gave the `CourtManager` tests to Logan and Yabsira and the controller to Shalin. In the end Logan wrote the model, controller, and view changes, and Jonathan wrote the new `CourtManager` tests.
 
 What doesn't work yet? MVP features, bad-input cases, or tests that are missing or failing.
 
-- **MVP features and bad input:** All MVP features work, every bad-input case from our scope is rejected without changing state, and all JUnit tests pass.
-- **Untested controller and view:** There are no automated tests for `GotNextController` or `ConsoleView`. Menu parsing and end-of-input were only checked by hand.
-- **Late registration errors:** The console asks for all five players before validating, so a blank or duplicate team name is only reported after the whole roster is typed.
-- **Player on two teams:** A player can still be on two teams at once. Cross-team checking is still a stretch goal.
+- **Everything in scope works.** All MVP features and the change feature work, every bad-input case from our scope and from the new feature is rejected without changing state, and all 42 JUnit tests pass.
+- **A staying winner cannot leave early.** Once a winner stays, they are on the court until the next match starts. There is no menu option for "the winner leaves".
+- **No limit on wins.** A team can stay on forever if it keeps winning.
+- **Untested controller and view:** There are still no automated tests for `GotNextController` or `ConsoleView`. Menu, y/n parsing, and end-of-input were checked by hand.
+- **Late errors:** The console asks for all five players before checking the team name, and asks y/n before checking the winner name, so some errors are only reported at the end.
+- **Player on two teams:** A player can still be on two teams at once.
+
+What design change would make the next feature cheaper?
+
+- **A public roster size.** `Team.TEAM_SIZE` is private, so the controller hard-codes five player prompts. Making it public (or adding a getter) would mean a roster-size change touches only `Team`.
+- **A `remove` method in `LinkedQueue`.** Our dropped stretch goal, leaving the line, needs to take a team out of the middle of the queue. Adding `remove(T item)` once to `LinkedQueue` would make that feature mostly a new `CourtManager` method and a menu option.
 
 ## Next Steps
 
-What is left to finish the MVP? The remaining features and fixes, in the order you will do them.
+What is left for the final build? Remaining features and fixes, in order.
 
-- All MVP features from the scope work, so only documentation is left:
-  1. **Using the program:** Replace the TODO with the five menu options (Register team, Start match, Finish match, View status, Quit) and what each one does.
-  2. **`@author` tags:** Add the missing tags to `ConsoleView`, `GotNextController`, `Main`, and `CourtManagerTest`.
-  3. **Attribution:** Fill in the empty `Main` row and the blank Contribution cells, confirm each file is credited to the right person, and complete the GenAI note.
+1. **Staying winner can leave:** Add a `CourtManager` method that clears `stayingTeam` with a failed `Result` if no winner is staying, plus a menu option and tests.
+2. **Earlier error messages:** Check the team name before asking for players, and the winner name before asking y/n. The model would expose a check (for example `isNameAvailable(String)`) so the rule stays in `CourtManager`.
+3. **Public roster size:** Make `Team.TEAM_SIZE` public so the controller stops hard-coding five.
+4. **Final README and demo practice.**
 
-Your change feature. Name it, then predict which classes (and methods) it will touch and which ones your design says should not need to change.
+Which stretch goals are you committing to, and which are you dropping?
 
-- **Winner stays on:** After a match, the winning team can choose to stay on the court, and only the next waiting team comes on to play them (scope stretch goal).
-- **Will change:**
-  - `CourtManager`: `finishMatch()` needs to know which team won and whether it stays. A new field will hold the staying winner between matches, which adds a fourth piece of changing state to the three listed in the spec's design note. `startMatch()` will pair the winner with one dequeued team instead of two, so its "at least two waiting" check depends on whether a winner is staying. The private `isTaken` helper must also check the staying winner so its name can't be re-registered.
-  - `GotNextController`: The finish-match handler will ask which team won and whether it stays, and reject invalid answers at the menu-syntax level, the same way it handles menu choices now.
-  - `ConsoleView`: `showState` will display a staying winner, and the view will print the new prompts.
-- **Should not change:** `LinkedQueue` doesn't need to change, because the winner is held in `CourtManager` and never goes back in the queue. `Team`, `Match`, and `Result` are immutable and should be reusable as they are. A new match is still two teams, with the winner as the home team. `Main` only wires objects together.
+- **Done:** Winner stays on, which was also our change feature.
+- **Committing to:** Letting a staying winner leave (item 1 above). It is small and finishes the feature.
+- **Dropping:** Leaving the line (including rejoining) and player conflict checking. Both need bigger changes to `LinkedQueue` or `Team` than we have time for.
 
-Which stretch goals will you attempt? The ones from your scope you are committing to, and the ones you are dropping.
+What will your 3-minute demo show? The path you'll walk through, including the new feature.
 
-- **Committing to:** Winner stays on, which is also our change feature.
-- **Dropping:** Leaving the line (including rejoining) and player conflict checking.
-
-What new tests will you need? The methods and bad-input cases the added work must cover.
-
-- Following the spec's test-first plan for the model, `CourtManagerTest` will cover:
-  - **`finishMatch` with a winner who stays:** The winner is held and the losing team leaves. The next `startMatch()` dequeues only one team and puts the winner on as home team.
-  - **`finishMatch` with a winner who leaves:** Both teams leave, same as the current behavior.
-  - **Bad input:** A winner who isn't in the current match, or a null/blank winner, returns a failed `Result` with state unchanged. Finishing with no match still fails.
-  - **`startMatch` with a winner held:** It fails with no teams waiting and succeeds with one. Both cases leave state unchanged on failure.
-  - **`registerTeam`:** Registering the staying winner's name, in any capitalization, is rejected.
-  - **Existing tests:** Update the current `finishMatch` and `startMatch` tests if their signatures change.
-- **Controller:** Check invalid winner and stay/leave answers by hand, as with the menu now, and run the full program after each step, per the spec's integration plan.
+| Time      | What we show                                                                                                  |
+| --------- | ------------------------------------------------------------------------------------------------------------- |
+| 0:00–0:20 | Start the program, pick option 4 to show an empty line and court                                              |
+| 0:20–1:00 | Register Lakers, Bulls, and Celtics, then try registering " lakers " again to show the duplicate rejection    |
+| 1:00–1:20 | Start match: Lakers vs Bulls, Celtics still waiting                                                           |
+| 1:20–1:50 | Finish match with bad input: a team not in the match, a blank name, and `maybe` for y/n; state does not change |
+| 1:50–2:20 | Finish with "Bulls" and `y`; status shows "Winner staying: Bulls", then start Bulls vs Celtics                 |
+| 2:20–2:40 | Finish with "Celtics" and `n`; court is empty, then try starting with no teams to show the failure            |
+| 2:40–3:00 | Run the JUnit tests and show all 42 passing                                                                   |
 
 Who does what? Which team member owns each remaining item.
 
-- **Model:** Logan and Yabsira own the `CourtManager` changes and the new `CourtManagerTest` cases.
-- **View:** Yabsira owns the `ConsoleView` changes for showing the staying winner and the new prompts, plus the "Using the program" section.
-- **Controller:** Shalin owns the finish-match flow in `GotNextController`.
-- **Whole team:** Each member adds their own `@author` tags and attribution rows. The whole team writes the GenAI note.
+- **Logan:** Item 1 (staying winner can leave) in `CourtManager` and its tests.
+- **Shalin:** Item 2 (earlier error messages) in `GotNextController`, and the menu option for item 1.
+- **Yabsira:** Item 3 (public roster size) and the controller/view by-hand test checklist.
+- **Jonathan:** Final README pass and running the demo script.
+- **Whole team:** Practice the demo once together before the final build is due.
 
 ## Attribution
 
-| File                | Team member(s) | Contribution (how)           |
-| ------------------- | -------------- | ---------------------------- |
-| LinkedQueue         | Logan          | GenAI drafted w/ supervision |
-| Team                | Logan          | GenAI drafted w/ supervision |
-| Match               | Logan          | GenAI drafted w/ supervision |
-| Result              | Logan          | GenAI drafted w/ supervision |
-| CourtManager        | Logan          | GenAI drafted w/ supervision |
-| ConsoleView         | Yabsira        | GenAI drafted w/ supervision |
-| GotNextController   | Yabsira        | GenAI drafted w/ supervision |
-| Main                | Logan          | GenAI drafted w/ supervision |
-| LinkedQueueTest     | Shalin         | GenAI drafted w/ supervision |
-| TeamTest            | Shalin         | GenAI drafted w/ supervision |
-| MatchTest           | Shalin         | GenAI drafted w/ supervision |
-| ResultTest          | Shalin         | GenAI drafted w/ supervision |
-| CourtManagerTest    | Yabsira, Jonathan | Yabsira: original tests, GenAI drafted w/ supervision. Jonathan: winner-stays-on tests |
-| README - Reflection | Jonathan       | GenAI drafted w/ supervision |
-| README - Next Steps | Jonathan       | GenAI drafted w/ supervision |
-| README              | _ALL_          | GenAI assisted               |
+| File                | Team member(s)  | Contribution (how)                                       |
+| ------------------- | --------------- | -------------------------------------------------------- |
+| LinkedQueue         | Logan           | GenAI drafted w/ supervision                             |
+| Team                | Logan           | GenAI drafted w/ supervision                             |
+| Match               | Logan           | GenAI drafted w/ supervision                             |
+| Result              | Logan           | GenAI drafted w/ supervision                             |
+| CourtManager        | Logan           | GenAI drafted w/ supervision; D4 feature GenAI-assisted  |
+| ConsoleView         | Yabsira, Logan  | Yabsira wrote; Logan revised for D4 (GenAI-assisted)     |
+| GotNextController   | Yabsira, Logan  | Yabsira wrote; Logan revised for D4 (GenAI-assisted)     |
+| Main                | Logan           | GenAI drafted w/ supervision                             |
+| LinkedQueueTest     | Shalin, Logan   | Shalin wrote; Logan added interleaved test for D4        |
+| TeamTest            | Shalin          | GenAI drafted w/ supervision                             |
+| MatchTest           | Shalin          | GenAI drafted w/ supervision                             |
+| ResultTest          | Shalin          | GenAI drafted w/ supervision                             |
+| CourtManagerTest    | Yabsira, Jonathan, Logan | Yabsira: original tests, GenAI drafted w/ supervision. Jonathan: winner-stays-on tests. Logan: one extra test |
+| README - Reflection | Jonathan, Logan | GenAI drafted w/ supervision                             |
+| README - Next Steps | Jonathan, Logan | GenAI drafted w/ supervision                             |
+| README              | _ALL_           | GenAI assisted                                           |
 
 GenAI note: used ChatGPT to build the project skeleton and write the five model classes from our Deliverable 2 method signatures, and later asked it to compare the code with our spec and explain some methods so I could understand them myself. I kept the code after checking it against the spec and running it with normal and bad input, and I also kept two changes it made on its own (moving `TEAM_SIZE` into `Team` and adding a private `isTaken()` helper) because they fit our design. It helped me write the code quickly in our old project's style, but it did not help with team decisions, and its design changes meant I had to track what changed for the Reflection.
 

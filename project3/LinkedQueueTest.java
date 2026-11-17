@@ -247,4 +247,29 @@ public class LinkedQueueTest
         assertEquals("A", queue.peek());
         assertEquals(Arrays.asList("A", "B", "C"), queue.toList());
     }
+
+
+    // ----------------------------------------------------------
+    /**
+     * Tests order when enqueue() and dequeue() are mixed
+     */
+    public void testInterleavedOrder()
+    {
+        queue.enqueue("A");
+        queue.enqueue("B");
+        assertEquals("A", queue.dequeue());
+        queue.enqueue("C");
+        assertEquals("B", queue.dequeue());
+        queue.enqueue("D");
+        queue.enqueue("E");
+        assertEquals(Arrays.asList("C", "D", "E"), queue.toList());
+        assertEquals("C", queue.dequeue());
+        assertEquals("D", queue.dequeue());
+        queue.enqueue("F");
+        assertEquals("E", queue.peek());
+        assertEquals(2, queue.size());
+        assertEquals("E", queue.dequeue());
+        assertEquals("F", queue.dequeue());
+        assertTrue(queue.isEmpty());
+    }
 }

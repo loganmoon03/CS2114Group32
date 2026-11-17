@@ -163,7 +163,7 @@ Who does what? Which team member owns each remaining item.
 | TeamTest            | Shalin         | GenAI drafted w/ supervision |
 | MatchTest           | Shalin         | GenAI drafted w/ supervision |
 | ResultTest          | Shalin         | GenAI drafted w/ supervision |
-| CourtManagerTest    | Yabsira        | GenAI drafted w/ supervision |
+| CourtManagerTest    | Yabsira, Jonathan | Yabsira: original tests, GenAI drafted w/ supervision. Jonathan: winner-stays-on tests |
 | README - Reflection | Jonathan       | GenAI drafted w/ supervision |
 | README - Next Steps | Jonathan       | GenAI drafted w/ supervision |
 | README              | _ALL_          | GenAI assisted               |

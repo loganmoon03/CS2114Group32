@@ -118,21 +118,25 @@ public class GotNextController
 
 
     // ----------------------------------------------------------
+    // ----------------------------------------------------------
     /**
      * Reads a team name and five players, then registers the team.
+     * Repeats each name prompt until non-blank input is entered.
      */
     private void handleRegister()
     {
-        String name = view.readLine("Team name: ");
+        String name = readRequiredName("Team name: ", "Team name");
         if (name == null)
         {
             running = false;
             return;
         }
+
         List<String> players = new ArrayList<String>();
         for (int i = 1; i <= 5; i++)
         {
-            String player = view.readLine("Player " + i + ": ");
+            String player = readRequiredName(
+                "Player " + i + ": ", "Player name");
             if (player == null)
             {
                 running = false;
@@ -140,8 +144,31 @@ public class GotNextController
             }
             players.add(player);
         }
+
         view.showResult(manager.registerTeam(name, players));
         handleViewStatus();
+    }
+
+
+    // ----------------------------------------------------------
+    /**
+     * Reads a name, repeating the prompt when the input is blank.
+     *
+     * @param prompt the text to show before reading
+     * @param fieldName the name of the field used in error messages
+     * @return non-blank input, or null at end of input
+     */
+    private String readRequiredName(String prompt, String fieldName)
+    {
+        while (true)
+        {
+            String input = view.readLine(prompt);
+            if (input == null || !input.trim().isEmpty())
+            {
+                return input;
+            }
+            view.showMessage(fieldName + " cannot be blank. Try again.");
+        }
     }
 
 
